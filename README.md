@@ -10,6 +10,6 @@ This isn't the [official AFNetworking repository](https://github.com/AFNetworkin
 Changes
 ----
 * Remove seldom used class: AFPropertyListRequestOperation, AFXMLRequestOperation.
-* Remove UIImageView category and AFImageRequestOperation. [SDWebImage](https://github.com/rs/SDWebImage) maybe a better choice.
+* Replace UIImageView category and AFImageRequestOperation with a modified version of [SDWebImage](https://github.com/rs/SDWebImage).
 * SystemConfiguration and MobileCoreServices framework aren't optional now. We always needs network reachability and MIME type detection.
 * Some AFNetworking Extensions included: [AFHTTPRequestOperationLogger](https://github.com/AFNetworking/AFHTTPRequestOperationLogger)
