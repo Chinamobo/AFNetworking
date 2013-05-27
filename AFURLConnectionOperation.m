@@ -138,6 +138,7 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
 @synthesize request = _request;
 @synthesize response = _response;
 @synthesize error = _error;
+@synthesize allowsInvalidSSLCertificate = _allowsInvalidSSLCertificate;
 @synthesize responseData = _responseData;
 @synthesize responseString = _responseString;
 @synthesize responseStringEncoding = _responseStringEncoding;
@@ -253,15 +254,13 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     self.request = urlRequest;
     
     self.shouldUseCredentialStorage = YES;
-    
-    self.outputStream = [NSOutputStream outputStreamToMemory];
-    
-    self.state = AFOperationReadyState;
 
     // #ifdef included for backwards-compatibility 
 #ifdef _AFNETWORKING_ALLOW_INVALID_SSL_CERTIFICATES_
     self.allowsInvalidSSLCertificate = YES;
 #endif
+
+    self.state = AFOperationReadyState;
 
     return self;
 }
@@ -312,17 +311,25 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     [self didChangeValueForKey:@"inputStream"];
 }
 
+- (NSOutputStream *)outputStream {
+    if (!_outputStream) {
+        self.outputStream = [NSOutputStream outputStreamToMemory];
+    }
+
+    return _outputStream;
+}
+
 - (void)setOutputStream:(NSOutputStream *)outputStream {
-    if (outputStream == _outputStream) {
-        return;
+    [self.lock lock];
+    if (outputStream != _outputStream) {
+        [self willChangeValueForKey:@"outputStream"];
+        if (_outputStream) {
+            [_outputStream close];
+        }
+        _outputStream = outputStream;
+        [self didChangeValueForKey:@"outputStream"];
     }
-    
-    [self willChangeValueForKey:@"outputStream"];
-    if (_outputStream) {
-        [_outputStream close];
-    }
-    _outputStream = outputStream;
-    [self didChangeValueForKey:@"outputStream"];
+    [self.lock unlock];
 }
 
 #if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
@@ -629,6 +636,8 @@ willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challe
                 break;
             }
         }
+    } else if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodDefault]) {
+        [[challenge sender] performDefaultHandlingForAuthenticationChallenge:challenge];
     }
 }
 #endif
@@ -665,25 +674,8 @@ didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
         self.authenticationChallenge(connection, challenge);
     } else {
         if ([challenge previousFailureCount] == 0) {
-            NSURLCredential *credential = nil;
-            
-            NSString *user = [[self.request URL] user];
-            NSString *password = [[self.request URL] password];
-            
-            if (user && password) {
-                credential = [NSURLCredential credentialWithUser:user password:password persistence:NSURLCredentialPersistenceNone];
-            } else if (user) {
-                credential = [[[NSURLCredentialStorage sharedCredentialStorage] credentialsForProtectionSpace:[challenge protectionSpace]] objectForKey:user];
-            } else {
-                credential = [[NSURLCredentialStorage sharedCredentialStorage] defaultCredentialForProtectionSpace:[challenge protectionSpace]];
-            }
-            
-            if (!credential) {
-                credential = self.credential;
-            }
-            
-            if (credential) {
-                [[challenge sender] useCredential:credential forAuthenticationChallenge:challenge];
+            if (self.credential) {
+                [[challenge sender] useCredential:self.credential forAuthenticationChallenge:challenge];
             } else {
                 [[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
             }
@@ -702,9 +694,11 @@ didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     if ([request.HTTPBodyStream conformsToProtocol:@protocol(NSCopying)]) {
         return [request.HTTPBodyStream copy];
+    } else {
+        [self cancelConnection];
+        
+        return nil;
     }
-    
-    return nil;
 }
 
 - (NSURLRequest *)connection:(NSURLConnection *)connection
