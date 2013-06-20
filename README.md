@@ -13,3 +13,4 @@ Changes
 * Replace UIImageView category and AFImageRequestOperation with a modified version of [SDWebImage](https://github.com/rs/SDWebImage).
 * SystemConfiguration and MobileCoreServices framework aren't optional now. We always needs network reachability and MIME type detection.
 * Some AFNetworking Extensions included: [AFHTTPRequestOperationLogger](https://github.com/AFNetworking/AFHTTPRequestOperationLogger)
+* Modify AFHTTPRequestOperationLogger to use dout instead of NSLog().
