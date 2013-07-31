@@ -112,6 +112,10 @@ static const NSInteger kDefaultCacheMaxCacheAge = 60 * 60 * 24 * 7; // 1 week
 - (NSString *)cachedFileNameForKey:(NSString *)key
 {
     const char *str = [key UTF8String];
+    if (str == NULL)
+    {
+        str = "";
+    }
     unsigned char r[CC_MD5_DIGEST_LENGTH];
     CC_MD5(str, (CC_LONG)strlen(str), r);
     NSString *filename = [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -421,6 +425,39 @@ static const NSInteger kDefaultCacheMaxCacheAge = 60 * 60 * 24 * 7; // 1 week
     }
     
     return count;
+}
+
+- (void)calculateSizeWithCompletionBlock:(void (^)(NSUInteger fileCount, unsigned long long totalSize))completionBlock
+{
+    NSURL *diskCacheURL = [NSURL fileURLWithPath:self.diskCachePath isDirectory:YES];
+
+    dispatch_async(self.ioQueue, ^
+    {
+        NSUInteger fileCount = 0;
+        unsigned long long totalSize = 0;
+
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSDirectoryEnumerator *fileEnumerator = [fileManager enumeratorAtURL:diskCacheURL
+                                                  includingPropertiesForKeys:@[ NSFileSize ]
+                                                                     options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                                errorHandler:NULL];
+
+        for (NSURL *fileURL in fileEnumerator)
+        {
+            NSNumber *fileSize;
+            [fileURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL];
+            totalSize += [fileSize unsignedLongLongValue];
+            fileCount += 1;
+        }
+
+        if (completionBlock)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^
+            {
+                completionBlock(fileCount, totalSize);
+            });
+        }
+    });
 }
 
 @end

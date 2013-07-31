@@ -151,7 +151,6 @@ static NSString *const kCompletedCallbackKey = @"completed";
         {
             if (!wself) return;
             SDWebImageDownloader *sself = wself;
-            [sself callbacksForURL:url];
             [sself removeCallbacksForURL:url];
         }];
         [wself.downloadQueue addOperation:operation];
@@ -161,6 +160,7 @@ static NSString *const kCompletedCallbackKey = @"completed";
             [wself.lastAddedOperation addDependency:operation];
             wself.lastAddedOperation = operation;
         }
+        operation = nil; // break retain cycle
     }];
 
     return operation;
