@@ -9,6 +9,7 @@ It provides:
 - An asynchronous image downloader
 - An asynchronous memory + disk image caching with automatic cache expiration handling
 - Animated GIF support
+- WebP format support
 - A background image decompression
 - A guarantee that the same URL won't be downloaded several times
 - A guarantee that bogus URLs won't be retried again and again
@@ -113,7 +114,7 @@ It's also possible to use the async image downloader independently:
                                                    {
                                                        // progression tracking code
                                                    }
-                                                   completed:^(UIImage *image, NSError *error, BOOL finished)
+                                                   completed:^(UIImage *image, NSData *data, NSError *error, BOOL finished)
                                                    {
                                                        if (image && finished)
                                                        {
@@ -216,7 +217,7 @@ There are two ways to use this in your project: copy all the files into your pro
 
 ### Add the SDWebImage project to your project
 
-- Download and unzip the last version of the framework from the [download page](https://github.com/rs/SDWebImage/wiki/Download-Complied-Framework)
+- Download and unzip the last version of the framework from the [download page](https://github.com/rs/SDWebImage/releases)
 - Right-click on the project navigator and select "Add Files to "Your Project":
 - In the dialog, select SDWebImage.framework:
 - Check the "Copy items into destination group's folder (if needed)" checkbox

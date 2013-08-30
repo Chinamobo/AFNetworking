@@ -160,7 +160,6 @@ static NSString *const kCompletedCallbackKey = @"completed";
             [wself.lastAddedOperation addDependency:operation];
             wself.lastAddedOperation = operation;
         }
-        operation = nil; // break retain cycle
     }];
 
     return operation;
@@ -209,7 +208,7 @@ static NSString *const kCompletedCallbackKey = @"completed";
     {
         callbacksForURL = self.URLCallbacks[url];
     });
-    return callbacksForURL;
+    return [callbacksForURL copy];
 }
 
 - (void)removeCallbacksForURL:(NSURL *)url

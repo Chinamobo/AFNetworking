@@ -1,6 +1,6 @@
 // AFHTTPRequestLogger.h
 //
-// Copyright (c) 2011 Mattt Thompson (http://mattt.me)
+// Copyright (c) 2011 AFNetworking (http://afnetworking.com/)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,23 +20,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import "dout.h"
-#define NSLog(...) DoutLogString([NSString stringWithFormat:__VA_ARGS__])
-
 #import "AFHTTPRequestOperationLogger.h"
 #import "AFHTTPRequestOperation.h"
+
 #import <objc/runtime.h>
 
-#if !__has_feature(objc_arc)
-#error AFHTTPRequestOperationLogger must be built with ARC.
-// You can turn on ARC for only AFHTTPRequestOperationLogger files by adding -fobjc-arc to the build phase for each of its files.
-#endif
-
 @implementation AFHTTPRequestOperationLogger
-@synthesize level = _level;
-@synthesize filterPredicate = _filterPredicate;
 
-+ (AFHTTPRequestOperationLogger *)sharedLogger {
++ (instancetype)sharedLogger {
     static AFHTTPRequestOperationLogger *_sharedLogger = nil;
     
     static dispatch_once_t onceToken;
@@ -75,7 +66,7 @@
 
 #pragma mark - NSNotification
 
-static void *AFHTTPRequestOperationStartDate = &AFHTTPRequestOperationStartDate;
+static void * AFHTTPRequestOperationStartDate = &AFHTTPRequestOperationStartDate;
 
 - (void)HTTPOperationDidStart:(NSNotification *)notification {
     AFHTTPRequestOperation *operation = (AFHTTPRequestOperation *)[notification object];
