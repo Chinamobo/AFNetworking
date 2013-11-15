@@ -10,3 +10,4 @@ This isn't the [official AFNetworking repository](https://github.com/AFNetworkin
 Changes
 ----
 * Base on AFNeworking 2.
+* [AFNetworkActivityLogger](https://github.com/AFNetworking/AFNetworkActivityLogger) included.
