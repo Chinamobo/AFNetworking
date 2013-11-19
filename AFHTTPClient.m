@@ -182,7 +182,7 @@ NSArray * AFQueryStringPairsFromKeyAndValue(NSString *key, id value) {
 #pragma mark -
 
 @interface AFHTTPClient ()
-@property (readwrite, nonatomic, strong) NSURL *baseURL;
+//@property (readwrite, nonatomic, strong) NSURL *baseURL;
 @property (readwrite, nonatomic, strong) NSMutableArray *registeredHTTPOperationClassNames;
 @property (readwrite, nonatomic, strong) NSMutableDictionary *defaultHeaders;
 @property (readwrite, nonatomic, strong) NSURLCredential *defaultCredential;

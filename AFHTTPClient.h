@@ -112,7 +112,7 @@ typedef enum {
 /**
  The url used as the base for paths specified in methods such as `getPath:parameters:success:failure`
  */
-@property (readonly, nonatomic, strong) NSURL *baseURL;
+@property (nonatomic, strong) NSURL *baseURL;
 
 /**
  The string encoding used in constructing url requests. This is `NSUTF8StringEncoding` by default.
