@@ -26,6 +26,9 @@
 
 #import <objc/runtime.h>
 
+#import "dout.h"
+#define NSLog(...) DoutLogString([NSString stringWithFormat:__VA_ARGS__])
+
 static NSURLRequest * AFNetworkRequestFromNotification(NSNotification *notification) {
     NSURLRequest *request = nil;
     if ([[notification object] isKindOfClass:[AFURLConnectionOperation class]]) {
