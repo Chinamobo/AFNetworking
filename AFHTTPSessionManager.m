@@ -41,10 +41,6 @@
 #import <UIKit/UIKit.h>
 #endif
 
-@interface AFURLSessionManager ()
-@property (readwrite, nonatomic, strong) AFNetworkReachabilityManager *reachabilityManager;
-@end
-
 @interface AFHTTPSessionManager ()
 @property (readwrite, nonatomic, strong) NSURL *baseURL;
 @end
@@ -285,6 +281,12 @@
 - (id)initWithCoder:(NSCoder *)decoder {
     NSURL *baseURL = [decoder decodeObjectForKey:NSStringFromSelector(@selector(baseURL))];
     NSURLSessionConfiguration *configuration = [decoder decodeObjectForKey:@"sessionConfiguration"];
+    if (!configuration) {
+        NSString *configurationIdentifier = [decoder decodeObjectForKey:@"identifier"];
+        if (configurationIdentifier) {
+            configuration = [NSURLSessionConfiguration backgroundSessionConfiguration:configurationIdentifier];
+        }
+    }
 
     self = [self initWithBaseURL:baseURL sessionConfiguration:configuration];
     if (!self) {
@@ -301,7 +303,11 @@
     [super encodeWithCoder:coder];
 
     [coder encodeObject:self.baseURL forKey:NSStringFromSelector(@selector(baseURL))];
-    [coder encodeObject:self.session.configuration forKey:@"sessionConfiguration"];
+    if ([self.session.configuration conformsToProtocol:@protocol(NSCoding)]) {
+        [coder encodeObject:self.session.configuration forKey:@"sessionConfiguration"];
+    } else {
+        [coder encodeObject:self.session.configuration.identifier forKey:@"identifier"];
+    }
     [coder encodeObject:self.requestSerializer forKey:NSStringFromSelector(@selector(requestSerializer))];
     [coder encodeObject:self.responseSerializer forKey:NSStringFromSelector(@selector(responseSerializer))];
 }

@@ -261,7 +261,7 @@ static BOOL AFCertificateHostMatchesDomain(NSString *certificateHost, NSString *
         return YES;
     }
 
-    if (!AFServerTrustIsValid(serverTrust)) {
+    if (!AFServerTrustIsValid(serverTrust) && !self.allowInvalidCertificates) {
         return NO;
     }
 
@@ -302,8 +302,6 @@ static BOOL AFCertificateHostMatchesDomain(NSString *certificateHost, NSString *
 
             shouldTrustServer = trustedPublicKeyCount > 0 && ((self.validatesCertificateChain && trustedPublicKeyCount == [serverCertificates count]) || (!self.validatesCertificateChain && trustedPublicKeyCount >= 1));
         }
-            break;
-        default:
             break;
     }
     
