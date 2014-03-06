@@ -11,3 +11,4 @@ Changes
 ----
 * Base on AFNeworking 2.
 * [AFNetworkActivityLogger](https://github.com/AFNetworking/AFNetworkActivityLogger) included.
+* Replace UIImageView and UIButton category with a modified version of [SDWebImage](https://github.com/rs/SDWebImage).
