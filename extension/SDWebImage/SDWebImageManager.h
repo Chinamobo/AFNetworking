@@ -132,14 +132,14 @@ typedef NSString *(^SDWebImageCacheKeyFilterBlock)(NSURL *url);
  * @code
 
 SDWebImageManager *manager = [SDWebImageManager sharedManager];
-[manager downloadWithURL:imageURL
-                 options:0
-                progress:nil
-               completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
-                   if (image) {
-                       // do something with image
-                   }
-               }];
+[manager downloadImageWithURL:imageURL
+                      options:0
+                     progress:nil
+                    completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+                        if (image) {
+                            // do something with image
+                        }
+                    }];
 
  * @endcode
  */
@@ -166,7 +166,7 @@ SDWebImageManager *manager = [SDWebImageManager sharedManager];
 
  * @endcode
  */
-@property (copy) SDWebImageCacheKeyFilterBlock cacheKeyFilter;
+@property (nonatomic, copy) SDWebImageCacheKeyFilterBlock cacheKeyFilter;
 
 /**
  * Returns global SDWebImageManager instance.

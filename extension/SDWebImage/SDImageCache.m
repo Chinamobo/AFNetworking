@@ -29,6 +29,10 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     return NO;
 }
 
+FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
+    return image.size.height * image.size.width * image.scale * image.scale;
+}
+
 @interface SDImageCache ()
 
 @property (strong, nonatomic) NSCache *memCache;
@@ -48,7 +52,6 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     static id instance;
     dispatch_once(&once, ^{
         instance = [self new];
-        kPNGSignatureData = [NSData dataWithBytes:kPNGSignatureBytes length:8];
     });
     return instance;
 }
@@ -61,6 +64,9 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     if ((self = [super init])) {
         NSString *fullNamespace = [@"com.hackemist.SDWebImageCache." stringByAppendingString:ns];
 
+        // initialise PNG signature data
+        kPNGSignatureData = [NSData dataWithBytes:kPNGSignatureBytes length:8];
+
         // Create IO serial queue
         _ioQueue = dispatch_queue_create("com.hackemist.SDWebImageCache", DISPATCH_QUEUE_SERIAL);
 
@@ -72,8 +78,10 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
         _memCache.name = fullNamespace;
 
         // Init the disk cache
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-        _diskCachePath = [paths[0] stringByAppendingPathComponent:fullNamespace];
+        _diskCachePath = [self makeDiskCachePath:fullNamespace];
+
+        // Set decompression to YES
+        _shouldDecompressImages = YES;
 
         dispatch_sync(_ioQueue, ^{
             _fileManager = [NSFileManager new];
@@ -142,12 +150,19 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
 
 #pragma mark ImageCache
 
+// Init the disk cache
+-(NSString *)makeDiskCachePath:(NSString*)fullNamespace{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    return [paths[0] stringByAppendingPathComponent:fullNamespace];
+}
+
 - (void)storeImage:(UIImage *)image recalculateFromImage:(BOOL)recalculate imageData:(NSData *)imageData forKey:(NSString *)key toDisk:(BOOL)toDisk {
     if (!image || !key) {
         return;
     }
 
-    [self.memCache setObject:image forKey:key cost:image.size.height * image.size.width * image.scale];
+    NSUInteger cost = SDCacheCostForImage(image);
+    [self.memCache setObject:image forKey:key cost:cost];
 
     if (toDisk) {
         dispatch_async(self.ioQueue, ^{
@@ -234,7 +249,7 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     // Second check the disk cache...
     UIImage *diskImage = [self diskImageForKey:key];
     if (diskImage) {
-        CGFloat cost = diskImage.size.height * diskImage.size.width * diskImage.scale;
+        NSUInteger cost = SDCacheCostForImage(diskImage);
         [self.memCache setObject:diskImage forKey:key cost:cost];
     }
 
@@ -248,7 +263,8 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
         return data;
     }
 
-    for (NSString *path in self.customPaths) {
+    NSArray *customPaths = [self.customPaths copy];
+    for (NSString *path in customPaths) {
         NSString *filePath = [self cachePathForKey:key inPath:path];
         NSData *imageData = [NSData dataWithContentsOfFile:filePath];
         if (imageData) {
@@ -264,7 +280,9 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     if (data) {
         UIImage *image = [UIImage sd_imageWithData:data];
         image = [self scaledImageForKey:key image:image];
-        image = [UIImage decodedImageWithImage:image];
+        if (self.shouldDecompressImages) {
+            image = [UIImage decodedImageWithImage:image];
+        }
         return image;
     }
     else {
@@ -302,7 +320,7 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
         @autoreleasepool {
             UIImage *diskImage = [self diskImageForKey:key];
             if (diskImage) {
-                CGFloat cost = diskImage.size.height * diskImage.size.width * diskImage.scale;
+                NSUInteger cost = SDCacheCostForImage(diskImage);
                 [self.memCache setObject:diskImage forKey:key cost:cost];
             }
 
